@@ -1,0 +1,27 @@
+body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #000;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+}
+
+#score, #level {
+    position: absolute;
+    top: 20px;
+    color: white;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+    padding: 10px;
+}
+
+#score {
+    left: 20px;
+}
+
+#level {
+    right: 20px;
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3D Bounce Game</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Add Three.js library before your script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="score">Score: <span id="score-value">0</span></div>
+    <div id="level">Level: <span id="level-value">1</span></div>
+    <!-- Add console logging to debug -->
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            console.log('DOM fully loaded');
+        });
+    </script>
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>
