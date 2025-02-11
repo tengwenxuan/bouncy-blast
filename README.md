@@ -8,14 +8,14 @@ python3 -m http.server 8000
 Then open the browser and go to http://localhost:8000
 
 ```
-
+```
 ## Project Structure
 
 ```
-demo-page
+root
 ├── index.html       # Main HTML document
 ├── css
-│   └── style.css    # Styles for the demo page
+│   └── style.css    # Styles for the game page
 └── js
     └── script.js     # JavaScript code for dynamic behavior
 ```
@@ -31,10 +31,10 @@ To set up and run the demo page, follow these steps:
 
 2. Navigate to the project directory:
    ```
-   cd demo-page
+   cd bouncy-blast
    ```
 
-3. Open `index.html` in your web browser to view the demo page.
+3. Open `index.html` in your web browser to view the game page.
 
 ## Usage
 
@@ -44,4 +44,4 @@ To set up and run the demo page, follow these steps:
 
 ## Contributing
 
-Feel free to submit issues or pull requests if you have suggestions or improvements for the demo page.
+Feel free to submit issues or pull requests if you have suggestions or improvements for the game.
