@@ -7,6 +7,10 @@ let gameState = {
     ballInPlay: false
 };
 
+// Add these variables at the top with other global variables
+let powerUps = [];
+const POWER_UP_CHANCE = 0.2; // 20% chance for power-up to spawn when breaking a brick
+
 function init() {
     console.log('Initializing game...');
     try {
@@ -14,7 +18,7 @@ function init() {
         scene = new THREE.Scene();
         console.log('Scene created');
         
-        scene.background = new THREE.Color(0x000000);
+        scene.background = new THREE.Color(0x808080); // Medium gray background
         camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         console.log('Camera created');
         
@@ -28,6 +32,34 @@ function init() {
         }
         container.appendChild(renderer.domElement);
         console.log('Renderer added to container');
+
+        // Add walls - Add this new section here
+        const wallMaterial = new THREE.MeshPhongMaterial({ 
+            color: 0x000000, // Change to black
+            transparent: true,
+            opacity: 0.7     // Increased opacity to make the black more visible
+        });
+
+        const leftWall = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5, 20, 1),
+            wallMaterial
+        );
+        leftWall.position.set(-9.25, 0, 0);
+        scene.add(leftWall);
+
+        const rightWall = new THREE.Mesh(
+            new THREE.BoxGeometry(0.5, 20, 1),
+            wallMaterial
+        );
+        rightWall.position.set(9.25, 0, 0);
+        scene.add(rightWall);
+
+        const topWall = new THREE.Mesh(
+            new THREE.BoxGeometry(19, 0.5, 1),
+            wallMaterial
+        );
+        topWall.position.set(0, 9.25, 0);
+        scene.add(topWall);
 
         // Create platform first
         const platformGeometry = new THREE.BoxGeometry(5, 0.5, 1);
@@ -48,11 +80,25 @@ function init() {
         // Rest of the initialization...
         createBricks();
 
-        // Add lights
-        const light = new THREE.PointLight(0xffffff, 1, 100);
-        light.position.set(0, 10, 10);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0x404040));
+        // Replace the existing lighting section with this enhanced lighting setup
+        const mainLight = new THREE.PointLight(0xffffff, 1.5, 100);
+        mainLight.position.set(0, 10, 10);
+        scene.add(mainLight);
+
+        const secondaryLight = new THREE.PointLight(0xffffff, 0.8, 100);
+        secondaryLight.position.set(0, -10, 10);
+        scene.add(secondaryLight);
+
+        const ambientLight = new THREE.AmbientLight(0x404040, 1.2);
+        scene.add(ambientLight);
+
+        const leftLight = new THREE.PointLight(0xffffff, 0.5, 50);
+        leftLight.position.set(-15, 0, 10);
+        scene.add(leftLight);
+
+        const rightLight = new THREE.PointLight(0xffffff, 0.5, 50);
+        rightLight.position.set(15, 0, 10);
+        scene.add(rightLight);
 
         // Position camera
         camera.position.z = 15;
@@ -118,6 +164,33 @@ function checkCollision(obj1, obj2) {
     return box1.intersectsBox(box2);
 }
 
+// Add this new function to create power-ups
+function createPowerUp(position) {
+    const powerUpGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+    const powerUpMaterial = new THREE.MeshPhongMaterial({ color: 0xffff00 }); // Yellow color
+    const powerUp = new THREE.Mesh(powerUpGeometry, powerUpMaterial);
+    powerUp.position.copy(position);
+    powerUp.userData.type = 'paddleSize';
+    scene.add(powerUp);
+    powerUps.push(powerUp);
+}
+
+// Add this function to handle power-up effects
+function activatePowerUp(type) {
+    if (type === 'paddleSize') {
+        // Increase platform size
+        platform.scale.x += 0.5;
+        document.getElementById('power-up-status').textContent = 'Bigger Paddle!';
+        
+        // Reset after 10 seconds
+        setTimeout(() => {
+            platform.scale.x = 1;
+            document.getElementById('power-up-status').textContent = 'None';
+        }, 10000);
+    }
+}
+
+// Modify the handleCollisions function to include power-up collision detection
 function handleCollisions() {
     // Platform collision
     if (checkCollision(ball, platform)) {
@@ -129,11 +202,18 @@ function handleCollisions() {
     // Brick collisions
     for (let i = bricks.length - 1; i >= 0; i--) {
         if (checkCollision(ball, bricks[i])) {
+            // Store brick position before removing it
+            const brickPos = bricks[i].position.clone();
             scene.remove(bricks[i]);
             bricks.splice(i, 1);
             ballVelocity.y *= -1;
             gameState.score += 10;
             document.getElementById('score-value').textContent = gameState.score;
+            
+            // Chance to spawn power-up
+            if (Math.random() < POWER_UP_CHANCE) {
+                createPowerUp(brickPos);
+            }
             
             if (bricks.length === 0) {
                 levelUp();
@@ -154,6 +234,22 @@ function handleCollisions() {
     if (ball.position.y < -10) {
         gameOver();
     }
+
+    // Power-up collisions
+    for (let i = powerUps.length - 1; i >= 0; i--) {
+        const powerUp = powerUps[i];
+        powerUp.position.y -= 0.1; // Make power-up fall
+
+        if (checkCollision(platform, powerUp)) {
+            activatePowerUp(powerUp.userData.type);
+            scene.remove(powerUp);
+            powerUps.splice(i, 1);
+        } else if (powerUp.position.y < -10) {
+            // Remove power-up if it falls off screen
+            scene.remove(powerUp);
+            powerUps.splice(i, 1);
+        }
+    }
 }
 
 function levelUp() {
@@ -172,6 +268,7 @@ function gameOver() {
     resetGame();
 }
 
+// Modify resetGame to clear power-ups
 function resetGame() {
     gameState.score = 0;
     gameState.level = 1;
@@ -182,6 +279,12 @@ function resetGame() {
     // Clear existing bricks
     bricks.forEach(brick => scene.remove(brick));
     bricks = [];
+    
+    // Clear power-ups
+    powerUps.forEach(powerUp => scene.remove(powerUp));
+    powerUps = [];
+    platform.scale.x = 1; // Reset paddle size
+    document.getElementById('power-up-status').textContent = 'None';
     
     resetBall();
     createBricks();
